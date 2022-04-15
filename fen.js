@@ -237,7 +237,7 @@ const getCurrentPosition = (prevPos, move, color) => {
   // Get the piece we want to move.
   const [movePiece] = move.match(/[RNBQK]/) ?? "P";
 
-  executeMoves(movePiece, +numericCol, +moveRow, color);
+  executeMoves(movePiece, +numericCol, +moveRow-1, color);
 
   /* Parse the modified FEN to a standard FEN code. */
   // Visually, black pieces come first, in a FEN code.
@@ -254,5 +254,5 @@ const getCurrentPosition = (prevPos, move, color) => {
 
 
 document.addEventListener("DOMContentLoaded", () =>
-  console.log(getCurrentPosition(initialPos, "Ra3", 1))
+  console.log(getCurrentPosition(initialPos, "e4", 1))
 );
