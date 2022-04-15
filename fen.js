@@ -26,7 +26,7 @@ const uniquePieces = ["K", "Q", "B"];
  */
 const findPiece = (piece, squareColor) => {
   // This function is useless when we're not searching for one of the unique pieces.
-  if (!uniquePieces.includes(piece)) return;
+  if (!uniquePieces.includes(piece.toUpperCase())) return;
 
   // The result this function returns is an object with coordinates x and y.
   let result = {};
@@ -69,7 +69,7 @@ const findPiece = (piece, squareColor) => {
 const executeMoves = (piece, col, row, color) => {
   // color can't be 0
   if (!color) return;
-
+  console.log(col, row);
   // This variable is to check later if the requested movement si possible
   let error = false;
 
@@ -83,19 +83,23 @@ const executeMoves = (piece, col, row, color) => {
 
   switch (piece) {
     case "P":
+      console.log('tu arbol ya no da sombra');
       // The pawns don't usually change of col, so the previous column will be the same as the new one.
       prevCol = col;
 
       // If the square where we want to place the piece is occuped, return. (This is provisional, we must add captures).
       if (rows[row][col] != " ") return;
       
-      if (rows[row-color][col] == piece) {
+      console.log(rows[row + 2 * -color][col] == renderPiece,
+        (row + 2 * -color == 1 || row + 2 * -color == 6));
+      if (rows[row-color][col] == renderPiece) {
         // If the pawn has moved only one step
         prevRow = row-color;
       } else if (
-        rows[row + 2 * -color][col] == piece &&
+        rows[row + 2 * -color][col] == renderPiece &&
         (row + 2 * -color == 1 || row + 2 * -color == 6)
       ) {
+        console.log('d');
         // If the pawn has moved two steps.
         // For this movement, we check that the pawn was placed in the 2nd or 7th row respectively.
         prevRow = row + 2 * -color;
@@ -107,19 +111,19 @@ const executeMoves = (piece, col, row, color) => {
       break;
 
     case "R":
-      if (rows[row].includes(piece)) {
+      if (rows[row].includes(renderPiece)) {
         /*
         The row that contains the square where we want to move the piece contains a Rook,
         means that we have to pick that Rook (we must add diferentiation).
         */
         prevRow = row;
-        prevCol = prevRow.indexOf(piece);
+        prevCol = prevRow.indexOf(renderPiece);
       } else {
         // If not, means that the Rook will do a vertical move.
         // Starting on the base that the row doesn't exist.
         let placedRow = -1;
         for (let row of rows) {
-          if (row.includes(piece)) {
+          if (row.includes(renderPiece)) {
             // When we find the row containing the Rook.
             placedRow = rows.indexOf(row);
             break;
@@ -160,7 +164,7 @@ const executeMoves = (piece, col, row, color) => {
           // Checking if that movement is still inside the x axis of the board.
           if (rows[row + move.x][col + move.y]) {
             // Checking if that movement is still inside the y axis of the board.
-            if (rows[row + move.x][col + move.y] == piece) {
+            if (rows[row + move.x][col + move.y] == renderPiece) {
               // If we find a Knight in the coordinates we're checking, stop.
               prevRow = row + move.x;
               prevCol = col + move.y;
@@ -254,5 +258,5 @@ const getCurrentPosition = (prevPos, move, color) => {
 
 
 document.addEventListener("DOMContentLoaded", () =>
-  console.log(getCurrentPosition(initialPos, "e4", 1))
+  console.log(getCurrentPosition(initialPos, "Qa5", -1))
 );
