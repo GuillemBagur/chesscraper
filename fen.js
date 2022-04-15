@@ -94,7 +94,7 @@ const executeMoves = (piece, col, row, color) => {
         prevRow = row-color;
       } else if (
         rows[row + 2 * -color][col] == piece &&
-        (row + 2 * -color == 2 || row + 2 * -color == 7)
+        (row + 2 * -color == 1 || row + 2 * -color == 6)
       ) {
         // If the pawn has moved two steps.
         // For this movement, we check that the pawn was placed in the 2nd or 7th row respectively.
