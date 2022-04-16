@@ -6,14 +6,46 @@ String.prototype.replaceAt = function (index, replacement) {
   return this.substring(0, index) + replacement + this.substring(index + 1);
 };
 
-let rows; // Global scope for this array;
-const initialPos = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+let rows; // Global scope for this array.
+let castlings; // Global scope for the castlings information.
+const initialPos = "rnbqkbnr/pppppppp/8/2N5/8/2N5/PPPPPPPP/R1BQKB1R w KQkq";
 
 /** Pieces that's not necessary to check them with their movements, because they're have another peculiarity:
  * Queen and King are unique
  * There are two Bishops, but each one always goes through the same square color
  **/
 const uniquePieces = ["K", "Q", "B"];
+
+// Checks if the given string is all upper case
+const isUpperCase = (string) => {
+  return string === string.toUpperCase();
+};
+
+/**
+ * Checks which player can castle
+ */
+const checkCastlings = () => {
+  const haveToBeRooks = {
+    Q: { x: 0, y: 7 },
+    K: { x: 7, y: 7 },
+    q: { x: 0, y: 0 },
+    k: { x: 7, y: 0 },
+  };
+
+  for (let rook in haveToBeRooks) {
+    const coords = haveToBeRooks[rook];
+    const renderRook = isUpperCase(rook) ? "R" : "r";
+    if (rows[coords.y][coords.x] != renderRook) {
+      const index = castlings.indexOf(rook);
+      if (index > -1) {
+        castlings.splice(index, 1);
+      }
+    }
+  }
+
+  if (rows[7][4] != "K") castlings.splice(0, 2);
+  if (rows[0][4] != "k") castlings.splice(2, 2);
+};
 
 /**
  * Find where's the requested piece placed. Theese pieces can be [Q, K, B], the other ones are
@@ -63,13 +95,15 @@ const findPiece = (piece, squareColor) => {
  * @param {integer} col - This is the column where is placed the square we want to place the piece in.
  * @param {integer} row - This is the row where is placed the square we want to place the piece in.
  * @param {integer} color - The color the player who has to move. If 1 is white. If -1 is black.
+ * @param {boolean} capturing - Checks if player is capturing or not. This is only rellevant for pawns movements.
+ * @param {object} altCoord - Just in case that there are two pieces placed in the same row/col that can execute the same move.
  *
  * @returns {nothing} Only modifies the globar array 'rows'
  */
-const executeMoves = (piece, col, row, color) => {
+const executeMoves = (piece, col, row, color, capturing, altCoord) => {
+  console.log(altCoord);
   // color can't be 0
   if (!color) return;
-  console.log(col, row);
   // This variable is to check later if the requested movement si possible
   let error = false;
 
@@ -83,23 +117,43 @@ const executeMoves = (piece, col, row, color) => {
 
   switch (piece) {
     case "P":
-      console.log('tu arbol ya no da sombra');
+      // Checks if player is capturing or not
+      if (capturing) {
+        if (rows[col][row] != " " || rows[col][row - 1] != " ") {
+          prevCol = col;
+          if (rows[row - color][col - 1]) {
+            if (rows[row - color][col - 1] == renderPiece) {
+              prevRow = row - color;
+              prevCol = col - 1;
+            }
+          }
+
+          if (rows[row - color][col + 1]) {
+            if (rows[row - color][col + 1] == renderPiece) {
+              prevRow = row - color;
+              prevCol = col + 1;
+            }
+          }
+        }
+
+        // Check if capture is 'in passant'
+        let enemyPawns = isUpperCase(renderPiece) ? "p" : "P";
+        if (rows[row][col] == " " && rows[row - 1][col] == enemyPawns) {
+          rows[row - 1] = rows[row - 1].replaceAt(col, " ");
+        }
+
+        break;
+      }
+
       // The pawns don't usually change of col, so the previous column will be the same as the new one.
       prevCol = col;
-
-      // If the square where we want to place the piece is occuped, return. (This is provisional, we must add captures).
-      if (rows[row][col] != " ") return;
-      
-      console.log(rows[row + 2 * -color][col] == renderPiece,
-        (row + 2 * -color == 1 || row + 2 * -color == 6));
-      if (rows[row-color][col] == renderPiece) {
+      if (rows[row - color][col] == renderPiece) {
         // If the pawn has moved only one step
-        prevRow = row-color;
+        prevRow = row - color;
       } else if (
         rows[row + 2 * -color][col] == renderPiece &&
         (row + 2 * -color == 1 || row + 2 * -color == 6)
       ) {
-        console.log('d');
         // If the pawn has moved two steps.
         // For this movement, we check that the pawn was placed in the 2nd or 7th row respectively.
         prevRow = row + 2 * -color;
@@ -111,22 +165,25 @@ const executeMoves = (piece, col, row, color) => {
       break;
 
     case "R":
+      console.log(rows[row]);
       if (rows[row].includes(renderPiece)) {
         /*
         The row that contains the square where we want to move the piece contains a Rook,
         means that we have to pick that Rook (we must add diferentiation).
         */
         prevRow = row;
-        prevCol = prevRow.indexOf(renderPiece);
+        prevCol = !altCoord.y ? rows[prevRow].indexOf(renderPiece) : altCoord.y;
       } else {
         // If not, means that the Rook will do a vertical move.
         // Starting on the base that the row doesn't exist.
         let placedRow = -1;
-        for (let row of rows) {
-          if (row.includes(renderPiece)) {
+        let detectedRooks = [];
+        for (let i = 0; i < rows.length; i++) {
+          let analyzingRow = rows[i];
+          if (analyzingRow.includes(renderPiece)) {
             // When we find the row containing the Rook.
-            placedRow = rows.indexOf(row);
-            break;
+            placedRow = i;
+            detectedRooks.push({ x: col, y: i });
           }
         }
 
@@ -136,8 +193,17 @@ const executeMoves = (piece, col, row, color) => {
           break;
         }
 
-        prevRow = placedRow;
-        prevCol = col;
+        console.log(detectedRooks);
+        let correctCoords =
+          detectedRooks.length > 1
+            ? detectedRooks.filter(
+                (el) => el.y == altCoord.x
+              )[0]
+            : detectedRooks[0];
+
+        prevRow = correctCoords.y;
+        prevCol = correctCoords.x;
+        console.log(prevCol, prevRow);
       }
 
       break;
@@ -158,7 +224,7 @@ const executeMoves = (piece, col, row, color) => {
         { x: 2, y: -1 },
       ];
 
-
+      let detectedKnights = [];
       for (let move of knightMoves) {
         if (rows[row + move.x]) {
           // Checking if that movement is still inside the x axis of the board.
@@ -166,17 +232,35 @@ const executeMoves = (piece, col, row, color) => {
             // Checking if that movement is still inside the y axis of the board.
             if (rows[row + move.x][col + move.y] == renderPiece) {
               // If we find a Knight in the coordinates we're checking, stop.
-              prevRow = row + move.x;
-              prevCol = col + move.y;
-              found = true;
-              break;
+              detectedKnights.push({ x: row + move.x, y: col + move.y });
             }
           }
         }
       }
 
       // If we haven't found any Knight in the available coordinates, error.
-      if (!found) error = true;
+      if (!detectedKnights.length) error = true;
+      let correctCoords;
+      if (detectedKnights.length > 1) {
+        console.log(1);
+        if (altCoord.x || altCoord.y) {
+          console.log(2);
+          console.log(detectedKnights);
+          correctCoords = detectedKnights.filter(
+            (el) => el.x == altCoord.x || el.y == altCoord.y
+          )[0];
+          if (correctCoords) {
+            prevCol = correctCoords.y;
+            prevRow = correctCoords.x;
+            console.log(correctCoords);
+            console.log("ando con los mios", prevCol, prevRow);
+            break;
+          }
+        }
+      }
+
+      prevCol = detectedKnights[0].x;
+      prevRow = detectedKnights[0].y;
       break;
 
     default:
@@ -187,7 +271,7 @@ const executeMoves = (piece, col, row, color) => {
       }
 
       // Get the coordinates of the piece.
-      result = findPiece(renderPiece, (col + (row)) % 2);
+      result = findPiece(renderPiece, (col + row) % 2);
 
       // Set the coordinates.
       prevRow = result["row"];
@@ -201,19 +285,25 @@ const executeMoves = (piece, col, row, color) => {
 
   // Else, set the new FEN.
   rows[prevRow] = rows[prevRow].replaceAt(prevCol, " ");
+  console.log(rows[prevRow], rows[prevRow][prevCol]);
   rows[row] = rows[row].replaceAt(col, renderPiece);
 };
 
-
 /**
- * 
+ *
  * @param {string} prevPos - The FEN code of the current position.
  * @param {string} move - Following the standard chess format /[RNBQK][a-h][1-8]/
  * @param {integer} color - 1 if it's white's turn. -1 if it's black's turn.
- * 
+ *
  * @returns {string} The new FEN code.
  */
-const getCurrentPosition = (prevPos, move, color) => {
+const getCurrentPosition = (prevPos, move) => {
+  const color = (prevPos.split(" ")[1] ?? "w").toLowerCase() == "b" ? -1 : 1;
+
+  const castrings = prevPos.split(" ")[2] ?? "";
+  castlings = castrings.match(/[KQ]/gi);
+
+  prevPos = prevPos.split(" ")[0];
   // Represent all the empty squares with a space (" ").
   prevPos = prevPos.replace(/[0-9]/g, (match) => {
     // Convert the match in an integer.
@@ -231,17 +321,54 @@ const getCurrentPosition = (prevPos, move, color) => {
   // Convert the FEN code in an array of rows.
   rows = prevPos.split("/").reverse();
 
-  // Convert chess coordinates in array coordinates.
-  const [moveCol] = move.match(/[a-h]/);
-  // Converting letters into numbers (97 is the ASCII code for letter a lower case)
-  const numericCol = moveCol.charCodeAt(0) - 97;
-  const [moveRow] = move.match(/[1-8]/);
-  
+  if ((move.match(/0-0(-0)?/g) ?? []).length < 1) {
+    // Convert chess coordinates in array coordinates.
+    let moveCol = move.match(/[a-h]/g);
+    let altCoords = {};
+    if (moveCol.length > 1) {
+      altCoords.y = moveCol[0].charCodeAt(0) - 97;
+    }
 
-  // Get the piece we want to move.
-  const [movePiece] = move.match(/[RNBQK]/) ?? "P";
+    moveCol = moveCol[moveCol.length - 1]; // We get the last match. Just in case there's a capture.
+    // Converting letters into numbers (97 is the ASCII code for letter a lower case)
+    const numericCol = moveCol.charCodeAt(0) - 97;
 
-  executeMoves(movePiece, +numericCol, +moveRow-1, color);
+    // Get the piece we want to move.
+    let moveRow = move.match(/[1-8]/g);
+    if (moveRow.length > 1) {
+      altCoords.x = +moveRow[0] - 1;
+    }
+
+    moveRow = +moveRow[moveRow.length - 1];
+    const [movePiece] = move.match(/[RNBQK]/) ?? "P";
+
+    // Check if the player is capturing
+    const capturing = (move.match("x") ?? []).length > 0;
+
+    executeMoves(
+      movePiece,
+      +numericCol,
+      +moveRow - 1,
+      color,
+      capturing,
+      altCoords
+    );
+  } else {
+    const castlingRow = color > 0 ? 0 : 7;
+    const renderKing = color > 0 ? "K" : "k";
+    const renderRook = color > 0 ? "R" : "r";
+    if (move == "0-0") {
+      rows[castlingRow] = rows[castlingRow].replaceAt(4, " ");
+      rows[castlingRow] = rows[castlingRow].replaceAt(5, renderRook);
+      rows[castlingRow] = rows[castlingRow].replaceAt(6, renderKing);
+      rows[castlingRow] = rows[castlingRow].replaceAt(7, " ");
+    } else if (move == "0-0-0") {
+      rows[castlingRow] = rows[castlingRow].replaceAt(4, " ");
+      rows[castlingRow] = rows[castlingRow].replaceAt(2, renderKing);
+      rows[castlingRow] = rows[castlingRow].replaceAt(3, renderRook);
+      rows[castlingRow] = rows[castlingRow].replaceAt(0, " ");
+    }
+  }
 
   /* Parse the modified FEN to a standard FEN code. */
   // Visually, black pieces come first, in a FEN code.
@@ -253,10 +380,13 @@ const getCurrentPosition = (prevPos, move, color) => {
     return match.length;
   });
 
-  return result;
+  checkCastlings();
+
+  // It's upside because it represents the next move.
+  const stringColor = color > 0 ? "b" : "w";
+  return `${result} ${stringColor} ${castlings.join("")}`;
 };
 
-
 document.addEventListener("DOMContentLoaded", () =>
-  console.log(getCurrentPosition(initialPos, "Qa5", -1))
+  console.log(getCurrentPosition(initialPos, "N3e4"))
 );
