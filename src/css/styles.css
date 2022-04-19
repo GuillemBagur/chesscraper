@@ -1,0 +1,40 @@
+.header {
+  
+  font: bold 55px normal;
+  margin-bottom: 20px;
+  padding: 15px 0;
+  border-bottom: solid 2px #000;
+  width: 100%;
+  text-shadow: #34f 3px 3px 5px;
+  background: url("../view/img/header.jpg") right;
+  background-repeat: repeat-y;
+}
+
+.text-align-center{
+  text-align: center;
+}
+
+table {
+  border: solid 3px #000;
+  background-color: rgba(130, 250, 114, 0.8);
+  width: 20%;
+}
+td,
+th {
+  font: bold 18px Verdana;
+  border: solid 2px #000;
+  margin: 0px;
+  padding: 5px;
+  background-color: #fff;
+}
+th {
+  font-size: 24px;
+}
+
+.inline-block{
+  display: inline-block;
+}
+
+#barra-lateral{
+  float: left;
+}

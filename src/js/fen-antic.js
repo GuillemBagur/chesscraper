@@ -9,6 +9,7 @@ String.prototype.replaceAt = function (index, replacement) {
 let rows; // Global scope for this array.
 let castlings; // Global scope for the castlings information.
 
+
 /** Pieces that's not necessary to check them with their movements, because they're have another peculiarity:
  * Queen and King are unique
  * There are two Bishops, but each one always goes through the same square color
@@ -35,15 +36,13 @@ const checkCastlings = () => {
     const coords = haveToBeRooks[rook];
     const renderRook = isUpperCase(rook) ? "R" : "r";
     if (rows[coords.y][coords.x] != renderRook) {
-      if (!castlings) return;
-      const index = (castlings ?? []).indexOf(rook);
+      const index = castlings.indexOf(rook);
       if (index > -1) {
         castlings.splice(index, 1);
       }
     }
   }
 
-  if (!castlings) return;
   if (rows[7][4] != "K") castlings.splice(0, 2);
   if (rows[0][4] != "k") castlings.splice(2, 2);
 };
@@ -100,7 +99,7 @@ const findPiece = (piece, squareColor) => {
  *
  * @returns {nothing} Only modifies the globar array 'rows'
  */
-const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) => {
+const executeMoves = (piece, col, row, color, capturing, altCoord) => {
   // color can't be 0
   if (!color) return;
   // This variable is to check later if the requested movement si possible
@@ -108,7 +107,7 @@ const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) =>
 
   // If it's white turn, the piece will be upper case. If not, it will be lower case.
   // renderPiece contains the piece we will place in the FEN code.
-  let renderPiece = color > 0 ? piece.toUpperCase() : piece.toLowerCase();
+  const renderPiece = color > 0 ? piece.toUpperCase() : piece.toLowerCase();
 
   // These are the coordinates of the piece we want to move (before the movement).
   let prevRow = null;
@@ -118,18 +117,24 @@ const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) =>
     case "P":
       // Checks if player is capturing or not
       if (capturing) {
-        prevCol = col;
-        if (rows[row - color][col - 1]) {
-          if (rows[row - color][col - 1] == renderPiece) {
-            prevRow = row - color;
-            prevCol = col - 1;
+        console.log('capturing');
+        if (rows[col][row] != " " || rows[col][row - 1] != " ") {
+          console.log(1);
+          prevCol = col;
+          if (rows[row - color][col - 1]) {
+            console.log('izq');
+            if (rows[row - color][col - 1] == renderPiece) {
+              prevRow = row - color;
+              prevCol = col - 1;
+            }
           }
-        }
 
-        if (rows[row - color][col + 1]) {
-          if (rows[row - color][col + 1] == renderPiece) {
-            prevRow = row - color;
-            prevCol = col + 1;
+          if (rows[row - color][col + 1]) {
+            console.log('der');
+            if (rows[row - color][col + 1] == renderPiece) {
+              prevRow = row - color;
+              prevCol = col + 1;
+            }
           }
         }
 
@@ -176,24 +181,12 @@ const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) =>
         let detectedRooks = [];
         for (let i = 0; i < rows.length; i++) {
           let analyzingRow = rows[i];
-          if (analyzingRow.includes(renderPiece) && analyzingRow.indexOf(renderPiece) == col) {
+          if (analyzingRow.includes(renderPiece)) {
             // When we find the row containing the Rook.
             placedRow = i;
-            let lastY = i;
-            detectedRooks.forEach(el => {
-              if(row-el.y <= row-lastY){
-                lastY = el.y;
-              }
-            });
-
-            if(lastY != i || !detectedRooks.length){
-              detectedRooks.push({ x: col, y: i });
-            }
-            
+            detectedRooks.push({ x: col, y: i });
           }
         }
-
-        detectedRooks = detectedRooks.filter(el => el)
 
         // If we don't find any row, return error.
         if (placedRow < 0) {
@@ -203,7 +196,9 @@ const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) =>
 
         let correctCoords =
           detectedRooks.length > 1
-            ? detectedRooks.filter((el) => el.y == altCoord.x)[0]
+            ? detectedRooks.filter(
+                (el) => el.y == altCoord.x
+              )[0]
             : detectedRooks[0];
 
         prevRow = correctCoords.y;
@@ -245,11 +240,11 @@ const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) =>
       if (detectedKnights.length > 1) {
         if (altCoord.x || altCoord.y) {
           correctCoords = detectedKnights.filter(
-            (el) => el.y == altCoord.x || el.x == altCoord.y
+            (el) => el.x == altCoord.x || el.y == altCoord.y
           )[0];
           if (correctCoords) {
-            prevCol = correctCoords.x;
-            prevRow = correctCoords.y;
+            prevCol = correctCoords.y;
+            prevRow = correctCoords.x;
             break;
           }
         }
@@ -280,12 +275,9 @@ const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) =>
   if (error) return;
 
   // Else, set the new FEN.
-  //console.log(rows[prevRow][prevCol], piece, col, row, prevCol, prevRow);
-  rows[prevRow] = (rows[prevRow] ?? "").replaceAt(prevCol, " ");
-  renderPiece = (promoting == "") ? renderPiece : promoting;
-  renderPiece = color > 0 ? renderPiece.toUpperCase() : renderPiece.toLowerCase();
+  console.log(prevCol);
+  rows[prevRow] = rows[prevRow].replaceAt(prevCol, " ");
   rows[row] = rows[row].replaceAt(col, renderPiece);
-  console.log(rows[prevRow], rows[row]);
 };
 
 /**
@@ -297,7 +289,6 @@ const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) =>
  * @returns {string} The new FEN code.
  */
 const getCurrentPosition = (prevPos, move) => {
-  console.log(move);
   const color = (prevPos.split(" ")[1] ?? "w").toLowerCase() == "b" ? -1 : 1;
 
   const castrings = prevPos.split(" ")[2] ?? "";
@@ -326,7 +317,7 @@ const getCurrentPosition = (prevPos, move) => {
     // Convert chess coordinates in array coordinates.
     let moveCol = move.match(/[a-h]/g);
     let altCoords = {};
-    if (moveCol.length ?? 0 > 1) {
+    if (moveCol.length > 1) {
       altCoords.y = moveCol[0].charCodeAt(0) - 97;
     }
 
@@ -346,26 +337,24 @@ const getCurrentPosition = (prevPos, move) => {
     // Check if the player is capturing
     const capturing = (move.match("x") ?? []).length > 0;
 
-    const promoting = (move.includes('=')) ? move.split('=')[1] : "";
     executeMoves(
       movePiece,
       +numericCol,
       +moveRow - 1,
       color,
       capturing,
-      altCoords,
-      promoting
+      altCoords
     );
   } else {
     const castlingRow = color > 0 ? 0 : 7;
     const renderKing = color > 0 ? "K" : "k";
     const renderRook = color > 0 ? "R" : "r";
-    if (move.match(/\-/g).length == 1) {
+    if (move == "0-0") {
       rows[castlingRow] = rows[castlingRow].replaceAt(4, " ");
       rows[castlingRow] = rows[castlingRow].replaceAt(5, renderRook);
       rows[castlingRow] = rows[castlingRow].replaceAt(6, renderKing);
       rows[castlingRow] = rows[castlingRow].replaceAt(7, " ");
-    } else if (move.match(/\-/g).length == 2) {
+    } else if (move == "0-0-0") {
       rows[castlingRow] = rows[castlingRow].replaceAt(4, " ");
       rows[castlingRow] = rows[castlingRow].replaceAt(2, renderKing);
       rows[castlingRow] = rows[castlingRow].replaceAt(3, renderRook);
@@ -387,9 +376,10 @@ const getCurrentPosition = (prevPos, move) => {
 
   // It's upside because it represents the next move.
   const stringColor = color > 0 ? "b" : "w";
-  return `${result} ${stringColor} ${(castlings ?? []).join("")}`;
+  //console.log(`${result} ${stringColor} ${castlings.join("")}`);
+  return `${result} ${stringColor} ${castlings.join("")}`;
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log(getCurrentPosition(initialPos, "e4"));
+  console.log(getCurrentPosition(initialPos, "e4"))
 });

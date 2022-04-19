@@ -1,11 +1,68 @@
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <title>Chesscraper</title>
+    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="../css/chessboard.css" />
+  </head>
+  <body>
+    <header class="header text-align-center">Benvinguts a Chesscraper!</header>
+    
+    <div id="barra-lateral" class="inline-block">
+      <input type="file" id="upload-pgn">
+      <table>
+        <tr>
+          <th colspan="2">Estadístiques Bàsiques</th>
+        </tr>
+        <tr>
+          <td>Elo:</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Elo màxim:</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Edat:</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>País:</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>ID FIDE:</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Nombre de partides:</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Percentatge de victòries, empats i derrotes:</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Mitjana Elo rivals:</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>Torneig amb més performance:</td>
+          <td></td>
+        </tr>
+      </table>
+    </div>
+    <div id="board" class="inline-block"></div>
+    <button id="next-move"></button>
+    <div id="stats-dinamiques"></div>
+    <div id="notacio" class="inline-block"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
+    <script src="../js/board.js"></script>
     <script src="../js/fen.js"></script>
-</body>
+    <script src="../js/ini.js"></script>
+    <script src="../js/pgn.js"></script>
+    <script src="../js/player-info.js"></script>
+  </body>
 </html>
