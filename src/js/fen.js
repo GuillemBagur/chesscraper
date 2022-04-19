@@ -280,12 +280,10 @@ const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) =>
   if (error) return;
 
   // Else, set the new FEN.
-  //console.log(rows[prevRow][prevCol], piece, col, row, prevCol, prevRow);
   rows[prevRow] = (rows[prevRow] ?? "").replaceAt(prevCol, " ");
   renderPiece = (promoting == "") ? renderPiece : promoting;
   renderPiece = color > 0 ? renderPiece.toUpperCase() : renderPiece.toLowerCase();
   rows[row] = rows[row].replaceAt(col, renderPiece);
-  console.log(rows[prevRow], rows[row]);
 };
 
 /**
@@ -297,7 +295,6 @@ const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) =>
  * @returns {string} The new FEN code.
  */
 const getCurrentPosition = (prevPos, move) => {
-  console.log(move);
   const color = (prevPos.split(" ")[1] ?? "w").toLowerCase() == "b" ? -1 : 1;
 
   const castrings = prevPos.split(" ")[2] ?? "";
@@ -325,8 +322,9 @@ const getCurrentPosition = (prevPos, move) => {
   if (move.split("-").length < 2) {
     // Convert chess coordinates in array coordinates.
     let moveCol = move.match(/[a-h]/g);
+    if(!moveCol) return 0;
     let altCoords = {};
-    if (moveCol.length ?? 0 > 1) {
+    if (moveCol.length > 1) {
       altCoords.y = moveCol[0].charCodeAt(0) - 97;
     }
 
@@ -370,6 +368,8 @@ const getCurrentPosition = (prevPos, move) => {
       rows[castlingRow] = rows[castlingRow].replaceAt(2, renderKing);
       rows[castlingRow] = rows[castlingRow].replaceAt(3, renderRook);
       rows[castlingRow] = rows[castlingRow].replaceAt(0, " ");
+    }else{
+      return 0;
     }
   }
 

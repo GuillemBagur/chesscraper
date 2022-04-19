@@ -1928,4 +1928,4 @@ var config = {
   notation: true,
 };
 
-var board = Chessboard("board", config);
+
