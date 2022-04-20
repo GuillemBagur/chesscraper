@@ -51,7 +51,8 @@ const getResultsInPosition = (games, position, untilDate) => {
     }
   }
 
-  console.log(results);
+  //console.log(results);
+  return results;
 };
 
 const getWinningPer = (games, untilDate) => {
@@ -172,6 +173,11 @@ const importGames = (file) => {
     chosenGame = convertToFEN(games[0]);
     updateNotation(games[0].moves, convertToFEN(games[0]));
     getDynamicData(games);
+    document.getElementById('search').addEventListener('click', () =>{
+      const fen = document.getElementById('search-fen').value;
+      const results = getResultsInPosition(games, fen);
+      console.log(results);
+    });
   };
 
   reader.onerror = (error) => reject(error);
@@ -182,3 +188,4 @@ document.addEventListener("DOMContentLoaded", () => {
   const uploadPgn = document.getElementById("upload-pgn");
   uploadPgn.addEventListener("change", () => importGames(uploadPgn.files[0]));
 });
+

@@ -26,6 +26,13 @@ const updateNotation = (game, fenGame) => {
   notation.innerHTML += "</ul>";
 };
 
+document.getElementById('prev-move').addEventListener('click', () =>{
+  move --;
+  if(move < 0) return;
+  if(chosenGame[move] == '1-0' || chosenGame[move] == '0-1' || chosenGame[move] == '1/2-1/2') return;
+  board.position(chosenGame[move]);
+});
+
 document.getElementById('next-move').addEventListener('click', () =>{
   move ++;
   // -2 because: -1 because we're using move as array index. The other one is to avoid the result (sometimes, it gets the result as a movement).
