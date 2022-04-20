@@ -42,13 +42,26 @@ th {
 
 
 #notation{
-  height: 30rem;
-  overflow-y: auto;
   background-color: green;;
 }
 
-#games-list{
+.notation-container{
+  padding: 1rem;
   height: 30rem;
   overflow-y: auto;
+}
+
+#notation ul{
+  width: 4rem;
+}
+
+#notation li{
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+#games-list{
   background-color: rgb(50, 49, 141);;
 }

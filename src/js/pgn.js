@@ -128,14 +128,6 @@ const getDynamicData = (games) => {
     games,
     `rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq`
   );
-
-  let move = 0;
-  const nextMove = () => {
-    move++;
-    board.position(FENMoves[move]);
-  };
-
-  document.getElementById("next-move").addEventListener("click", nextMove);
 };
 
 /**
@@ -177,6 +169,7 @@ const importGames = (file) => {
     }
 
     updateGamesList(games);
+    chosenGame = convertToFEN(games[0]);
     updateNotation(games[0].moves, convertToFEN(games[0]));
     getDynamicData(games);
   };

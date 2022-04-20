@@ -295,6 +295,7 @@ const executeMoves = (piece, col, row, color, capturing, altCoord, promoting) =>
  * @returns {string} The new FEN code.
  */
 const getCurrentPosition = (prevPos, move) => {
+  console.log(move);
   const color = (prevPos.split(" ")[1] ?? "w").toLowerCase() == "b" ? -1 : 1;
 
   const castrings = prevPos.split(" ")[2] ?? "";
